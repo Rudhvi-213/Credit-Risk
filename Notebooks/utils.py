@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 def max_ks(predict_prob, DV):
     merged = np.dstack((DV, predict_prob))
@@ -22,3 +23,28 @@ def max_ks(predict_prob, DV):
 def ks_scorer(estimator, X, y):
     y_pred_proba = estimator.predict_proba(X)[:, 1]
     return max_ks(y.values if hasattr(y, "values") else y, y_pred_proba)
+
+def calculate_iv(df, feature, target, bins=10):
+    df = df[[feature, target]].copy()
+    
+    # Bin feature
+    df["bin"] = pd.qcut(df[feature], q=bins, duplicates="drop")
+    
+    grouped = df.groupby("bin")[target].agg(["count", "sum"])
+    grouped.columns = ["total", "bads"]
+    
+    grouped["goods"] = grouped["total"] - grouped["bads"]
+    
+    # Distribution
+    grouped["dist_bad"] = grouped["bads"] / grouped["bads"].sum()
+    grouped["dist_good"] = grouped["goods"] / grouped["goods"].sum()
+    
+    # Avoid division by zero
+    grouped["woe"] = np.log(
+        (grouped["dist_good"] + 1e-6) /
+        (grouped["dist_bad"] + 1e-6)
+    )
+    
+    grouped["iv"] = (grouped["dist_good"] - grouped["dist_bad"]) * grouped["woe"]
+    
+    return grouped["iv"].sum()

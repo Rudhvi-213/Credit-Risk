@@ -1,3 +1,5 @@
 /dataset
 /catboost_info
 /__pycache__
+/Notebooks/__pycache__
+/Notebooks/catboost_info
