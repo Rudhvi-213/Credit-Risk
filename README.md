@@ -1,201 +1,177 @@
-# Credit Risk Probability of Default (PD) Modeling
+# Credit Risk Modeling – End-to-End Machine Learning Project
 
-## 1. Project Overview
+## 📌 Project Overview
 
-This project focuses on building, validating, and scoring a **Probability of Default (PD) model** for credit risk assessment. The objective is to accurately rank-order customers by default risk while ensuring strong generalization, stability across development (DEV), validation (VAL), and test (TEST) samples.
+This project demonstrates an **end-to-end credit risk modeling workflow** focused on **model development, validation, and analysis**, following practices commonly used in **real-world credit risk modeling**.
 
-The final model demonstrates:
-
-* Improved **KS** for
-* Stable and monotonic **rank ordering across all tiers** in DEV, VAL, TEST
-* Minimal and acceptable KS degradation on TEST, indicating reduced overfitting
-
-This repository contains the full modeling workflow—from data preparation to scoring and performance evaluation—designed to be **production-ready** and **model governance friendly**.
+The objective is to estimate the **probability of default (PD)** for loan applicants. The project currently supports **offline scoring**: given a prepared input dataset, the model applies the same preprocessing steps and produces a risk score.
 
 ---
 
-## 2. Key Objectives
+## 🎯 Key Objectives
 
-* Build a robust PD model with strong discriminatory power
-* Ensure monotonic risk ranking across score bands
-* Minimize overfitting while maintaining performance
-* Provide explainability via feature importance
-* Enable reproducible scoring for DEV / VAL / TEST datasets
-
----
-
-## 3. Data Description
-
-The modeling dataset consists of:
-
-* **Encoded feature set** (`df_dataset_encoded`)
-* Binary target variable: `target_default`
-* Sampling flag: `Sampling` (DEV / VAL / TEST)
-
-### Sampling Strategy
-
-* **DEV**: Model training and tuning
-* **VAL**: Model selection, rank-order validation
-* **TEST**: Final unbiased performance assessment
+* Build credit risk models using **XGBoost, LightGBM, and CatBoost**
+* Explicitly test **class imbalance handling** and make data-driven model choices
+* Evaluate models using **KS as the primary performance metric**
+* Perform disciplined **DEV–VAL–TEST** based model selection
+* Validate **rank ordering** using decile / gains analysis
+* Analyze **feature importance and Information Value (IV)** for interpretability
+* Persist final models and scored datasets for reproducibility
 
 ---
 
-## 4. Feature Engineering & Selection
-
-* Input features were preprocessed and encoded prior to modeling
-
-The final feature list is stored as:
+## 🧱 Project Structure
 
 ```
-selected_features
-```
-
----
-
-## 5. Model Development
-
-* **Algorithm**: CatBoost Classifier
-* **Reason for selection**:
-
-  * Handles non-linear relationships effectively
-  * Robust to feature interactions
-  * Strong out-of-the-box performance for tabular credit data
-
-### Training
-
-* Model trained on DEV sample
-* Hyperparameters tuned to balance bias–variance tradeoff
-* Retrained using finalized feature set
-
----
-
-## 6. Model Scoring
-
-PD scores are generated using the retrained model:
-
-```python
-pd_score = model.predict_proba(X)[:, 1]
-```
-
-Scores are appended to the dataset for further analysis and monitoring.
-
----
-
-## 7. Model Performance Summary
-
-### 7.1 KS Statistics
-
-* **DEV**: Improved
-* **VAL**: Improved and fully monotonic
-* **TEST**: Marginal decrease (~0.1), within acceptable tolerance
-
-📌 Interpretation:
-
-> The slight TEST KS reduction indicates reduced overfitting and better generalization.
-
----
-
-### 7.2 Rank Ordering
-
-* Perfect rank ordering achieved across **all tiers in VAL**
-* No inversions observed in bad rates or PD bands
-
-This confirms the model’s suitability for:
-
-* Risk segmentation
-* Policy rules
-* Cutoff-based decisioning
-
----
-
-## 8. Feature Importance & Explainability
-
-Feature importance is computed using:
-
-* CatBoost native feature importance
-* SHAP values (for global and local explainability)
-
-This ensures:
-
-* Regulatory interpretability
-* Transparent risk drivers
-* Model governance readiness
-
----
-
-## 9. Stability & Validation Checks
-
-The following validation checks are part of the workflow:
-
-* KS by sample (DEV / VAL / TEST)
-* Bad rate monotonicity by decile
-* Population Stability Index (PSI)
-* Feature consistency across datasets
-
-These checks ensure the model is stable and production-safe.
-
----
-
-## 10. Project Structure
-
-```
-├── data/
-│   ├── raw/
-│   ├── processed/
-├── notebooks/
-│   ├── feature_engineering.ipynb
-│   ├── model_training.ipynb
-│   ├── validation_analysis.ipynb
-├── src/
-│   ├── scoring.py
-│   ├── metrics.py
-│   ├── feature_importance.py
-├── artifacts/
-│   ├── trained_model.cbm
-│   ├── feature_importance.csv
+credit-risk/
+│
+├── Data/
+│   ├── credit_risk_scored_dataset.csv
+│   ├── model_dataset_with_sampling.csv      # DEV / VAL / TEST flagged dataset
+│   ├── model_Results.xlsx                   # Model results & comparisons
+│
+├── Notebooks/
+│   ├── pre_processing.ipynb                 # Data cleaning, encoding, feature engineering
+│   ├── training.ipynb                       # Model training & hyperparameter tuning
+│   ├── model_results.ipynb                  # Model comparison, validation & analysis
+│   ├── utils.py                             # KS, IV, scoring utilities
+│
+├── Models/
+│   ├── catboost_model.cbm                   # Final selected model
+│   ├── lightgbm_model.pkl                   # Challenger model
+│   ├── xgboost_model.pkl                    # Challenger model
+│
+├── credit_risk_env.yml                      # Conda environment
+├── requirements.txt
 ├── README.md
 ```
 
 ---
 
-## 11. How to Run
+## 📊 Dataset & Target
 
-1. Create conda environment from `environment.yml`
-2. Train model on DEV sample
-3. Validate using VAL sample
-4. Score TEST sample
-5. Generate performance and explainability reports
+* **Target Variable:** `target_default` (1 = default, 0 = non-default)
+* **Sampling Strategy:** Explicit split into
 
----
-
-## 12. Business Impact
-
-* Improved risk discrimination
-* Stable decision thresholds
-* Transparent risk drivers
-* Ready for deployment and monitoring
-
-This model supports **risk-based pricing**, **credit policy**, and **portfolio monitoring** use cases.
+  * `DEV` – model development & tuning
+  * `VAL` – model validation
+  * `TEST` – final unbiased evaluation
 
 ---
 
-## 13. Final Notes
+## ⚙️ Modeling Approach
 
-This project follows best practices in:
+### Models Trained
 
-* Credit risk modeling
-* Model validation
-* Explainability
-* Production readiness
+* XGBoost
+* LightGBM
+* CatBoost
 
-The final model balances **performance, stability, and interpretability**, making it suitable for real-world deployment.
+Class imbalance was explicitly tested using model-specific weighting strategies (e.g., `scale_pos_weight`, `class_weight`, `auto_class_weights`). However, **unweighted models consistently demonstrated better validation KS and stability**. Therefore, unweighted models were selected based on empirical performance.
+
+### Hyperparameter Tuning Strategy
+
+* Manual grid search
+* Models trained **only on DEV**
+* Model selection based on:
+
+  * **Validation KS**
+  * **KS Gap (DEV − VAL)**
+* No re-tuning after observing TEST performance
+
+This approach mirrors practical credit risk development workflows.
 
 ---
 
-✅ **Status**: Model finalized and validated
+## 🏆 Model Selection Results
 
-📌 **Next steps**:
+### Final Performance (Frozen Models)
 
-* Calibration (if required)
-* Production deployment
-* Ongoing monitoring (PSI / KS drift)
+| Model                         | DEV_KS    | VAL_KS    | TEST_KS   |
+| ----------------------------- | --------- | --------- | --------- |
+| XGBoost                       | 38.45     | 33.21     | 31.31     |
+| LightGBM                      | 40.85     | 33.00     | 31.35     |
+| **CatBoost (Selected Model)** | **36.99** | **33.36** | **31.80** |
+
+**CatBoost** was selected as the final model due to:
+
+* Highest validation and test KS
+* Lowest overfitting (stable KS gap)
+* Consistent generalization across DEV, VAL, and TEST
+
+Detailed model results are documented in the **model results Excel file**.
+
+---
+
+## 📈 Rank Ordering Validation (Decile / Gains Analysis)
+
+* Deciles created on **DEV, VAL, TEST datasets** using predicted PD scores
+* Strong monotonic increase in bad rates from lowest to highest risk deciles
+
+
+This confirms the model is **cut-off ready** for risk-based decisioning.
+
+---
+
+## 🔍 Stability Considerations
+
+Basic stability checks were performed across DEV, VAL, and TEST samples. Given that datasets were generated using controlled sampling with identical target rates, no material population shift was observed during development.
+
+---
+
+## 🧠 Feature Analysis
+
+### Feature Importance
+
+* Model-based feature importance was extracted from CatBoost
+* Importance reflects **multivariate contribution** and interaction effects
+
+### Information Value (IV)
+
+* IV was computed on the DEV dataset
+* IV was used to assess **univariate predictive strength**
+* No features exhibited abnormally high IV values indicative of leakage
+
+> Note: Full **model explainability** using SHAP or local explanation techniques has not yet been implemented and is planned as a future extension.
+
+---
+
+## 💾 Model Persistence & Reproducibility
+
+* Final models are saved for **offline scoring and analysis**
+* Scored datasets are exported to CSV for downstream evaluation
+* Conda environment is captured via `credit_risk_env.yml`
+
+This ensures reproducibility of results within the scope of this project.
+
+---
+
+## 🛠️ Utilities
+
+Key custom utilities implemented in `utils.py`:
+
+* KS calculation
+* KS scorer for model selection
+* Information Value (IV) computation
+
+---
+
+## 📌 Key Learnings
+
+* Validation and stability matter more than raw performance
+* ML-based credit models rely heavily on **feature interactions**
+* Proper DEV–VAL–TEST discipline is critical to avoid leakage
+* Explainability and governance are essential for real-world deployment
+
+---
+
+## 📄 Disclaimer
+
+This project is for **educational and portfolio purposes only** and does not represent a production credit decisioning system.
+
+---
+
+## 👤 Author
+
+**Rudhvi Uggirala**
+Data Scientist – Risk & Credit Analytics
